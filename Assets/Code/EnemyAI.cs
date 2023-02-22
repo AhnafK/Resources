@@ -6,20 +6,23 @@ public class EnemyAI : MonoBehaviour
 {
     Transform player;
     public float speed = 2f;
+    Rigidbody2D _rigidbody;
 
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
+        _rigidbody = GetComponent<Rigidbody2D>();
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        if (player.position.x > transform.position.x ||
+        if (player && player.position.x > transform.position.x ||
         player.position.x < transform.position.x)
         {
             transform.localScale *= new Vector2(-1, 1);
         }
         Vector3 direction = (player.position - transform.position).normalized;
-        transform.Translate(direction  * speed * Time.deltaTime);
+        _rigidbody.velocity = direction * speed;
+        //transform.Translate(direction  * speed * Time.deltaTime);
     }
 }

@@ -2,26 +2,106 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
     Rigidbody2D _rigidbody;
-    public int bullets;
+    public int bullets = 1;
+    public float distForAmmo = 2;
+    public float distForHunger = 1;
+    public int bulletSpeed = 10;
+    public int ammo = 0;
+    public int maxAmmo = 25;
     public float health = 100;
+    float maxHealth;
     public float hunger = 100;
+    public int starvationDivider = 5;
+    float maxHunger;
+    public float initialSpeed = 5;
+    float speed;
     public GameObject bulletPrefab;
+    public Text ammoText;
+    public Text healthText;
+    public Text hungerText;
+    public Text loadedText;
+    public Text scoreText;
+    public Image hungerBar;
+    public Image healthBar;
+    bool canShoot;
 
-    // Start is called before the first frame update
+    Vector2 lastPos;
+    float distance;
+
     void Start()
     {
         _rigidbody = GetComponent<Rigidbody2D>();
+        speed = initialSpeed;
         bullets = 1;
+        maxHealth = health;
+        maxHunger = hunger;
+        lastPos = transform.position;
+        canShoot = true;
     }
 
-    // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-       
+        // reduce hunger and gain ammo based on distance moved
+        distance += Vector2.Distance(transform.position, lastPos);
+        hunger -= Vector2.Distance(transform.position, lastPos) / distForHunger;
+
+        // Starvation
+        if (hunger <= 0)
+        {
+            health += hunger/starvationDivider;
+            hunger = 0;
+            speed = initialSpeed / 5;
+        }
+        else
+        {
+            speed = initialSpeed;
+        }
+
+        // Overeating
+        if (hunger > maxHunger)
+        {
+            health += (hunger - maxHunger) / 3;
+            hunger = maxHunger;
+        }
+
+        // Enforcing max health
+        if (health > maxHealth)
+        {
+            health = maxHealth;
+        }
+
+        // Current death implementation
+        else if (health <= 0)
+        {
+            Destroy(gameObject);
+        }
+
+        // Gain ammo
+        if (distance >= distForAmmo)
+        {
+            ammo += (int)(distance / distForAmmo);
+            distance = distance % distForAmmo;
+            if (ammo > maxAmmo)
+            {
+                ammo = maxAmmo;
+            }
+        }
+
+
+        // Update UI
+        scoreText.text = int.Parse(scoreText.text) + Time.deltaTime*200 + "";
+        lastPos = transform.position;
+        hungerText.text = ""+(int)hunger;
+        healthText.text = ""+(int)health;
+        ammoText.text = ""+ammo;
+        healthBar.fillAmount = health/maxHealth;
+        hungerBar.fillAmount = hunger/maxHunger;
     }
 
     // Called when player scrolls the wheel on the mouse
@@ -44,6 +124,7 @@ public class Player : MonoBehaviour
                     bullets--;
                 }
             }
+            loadedText.text = ""+bullets;
         }
     }
 
@@ -51,22 +132,74 @@ public class Player : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         Vector2 move = context.ReadValue<Vector2>();
-        _rigidbody.velocity = move * 5;
+        _rigidbody.velocity = move * speed;
     }
 
     // shoot towards mouse
     public void OnShoot(InputAction.CallbackContext context)
     {
-        if (context.started)
-        {
-            for (int i = 0; i < bullets; i++)
-            {
-                GameObject firedBullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
-                firedBullet.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue()).y - transform.position.y, Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue()).x - transform.position.x) * Mathf.Rad2Deg);
-                firedBullet.transform.localScale *= bullets;
-                firedBullet.GetComponent<Rigidbody2D>().velocity = (Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue()) - transform.position).normalized * 10;
-            }
+        if (canShoot && context.started && ammo >= bullets)
+        {            
+            
+            Vector2 currPos = transform.position;
+            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            GameObject firedBullet = Instantiate(bulletPrefab, transform.position, Quaternion.Euler(0, 0, Mathf.Atan2(mousePos.y - currPos.y, mousePos.x - currPos.x) * Mathf.Rad2Deg + 90));
+            firedBullet.transform.localScale *= bullets;
+            firedBullet.GetComponent<Rigidbody2D>().velocity = (mousePos - currPos).normalized * bulletSpeed;
+            firedBullet.GetComponent<Bullet>().power = bullets;
+            firedBullet.GetComponent<Bullet>().scoreText = scoreText;
+            ammo -= bullets;
+            canShoot = false;
+            StartCoroutine(ShootDelay());
         }
     }
 
+    IEnumerator ShootDelay()
+    {
+        yield return new WaitForSeconds(0.2f);
+        canShoot = true;
+    }
+
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Food")
+        {
+            // get hunger from food visual scripting component
+            Eat(collision.gameObject.GetComponent<food>());
+            Destroy(collision.gameObject);
+        }
+    }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Food")
+        {
+            // get hunger from food visual scripting component
+            Eat(collision.gameObject.GetComponent<food>());
+            Destroy(collision.gameObject);
+        }
+        else if (collision.gameObject.tag == "Enemy")
+        {
+            health -= 10;
+
+            // push player away from enemy
+            Vector2 currPos = transform.position;
+            Vector2 enemyPos = collision.gameObject.transform.position;
+            _rigidbody.AddForce((currPos - enemyPos).normalized * 800);
+
+        }
+        
+    }
+
+    void Eat(food eating){
+        hunger += eating.foodValue;
+    }
+
+    public void onReset(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);            
+        }
+    }
 }
