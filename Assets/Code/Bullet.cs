@@ -5,15 +5,12 @@ using UnityEngine;
 public class Bullet : MonoBehaviour
 {
     // Start is called before the first frame update
+    public int power = 1;
+    Vector2 size;
     void Start()
     {
         Destroy(gameObject, 5);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        size = transform.localScale/power;
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -21,7 +18,13 @@ public class Bullet : MonoBehaviour
         if (collision.gameObject.tag == "Enemy")
         {
             Destroy(collision.gameObject);
-            Destroy(this.gameObject);
+            if(power > 1){
+                power--;
+                transform.localScale = size*power;
+            }
+            else{
+                Destroy(this.gameObject);
+            }
         }
     }
 }

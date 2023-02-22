@@ -22,8 +22,9 @@ public class Player : MonoBehaviour
     public Text ammoText;
     public Text healthText;
     public Text hungerText;
-    public Transform hungerBar;
-    public Transform healthBar;
+    public Text loadedText;
+    public Image hungerBar;
+    public Image healthBar;
     
 
     Vector2 lastPos;
@@ -73,11 +74,11 @@ public class Player : MonoBehaviour
             distance = distance % distForAmmo;
         }
         lastPos = transform.position;
-        hungerText.text = ""+hunger;
-        healthText.text = ""+health;
+        hungerText.text = ""+(int)hunger;
+        healthText.text = ""+(int)health;
         ammoText.text = ""+ammo;
-        healthBar.localScale = new Vector3(health/10, healthBar.localScale.y, healthBar.localScale.z);
-        hungerBar.localScale = new Vector3(hunger/10, hungerBar.localScale.y, hungerBar.localScale.z);
+        healthBar.fillAmount = health/maxHealth;
+        hungerBar.fillAmount = hunger/maxHunger;
     }
 
     // Called when player scrolls the wheel on the mouse
@@ -100,6 +101,7 @@ public class Player : MonoBehaviour
                     bullets--;
                 }
             }
+            loadedText.text = ""+bullets;
         }
     }
 
@@ -115,12 +117,13 @@ public class Player : MonoBehaviour
     {
         if (context.started && ammo >= bullets)
         {            
-            GameObject firedBullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+            
             Vector2 currPos = transform.position;
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            firedBullet.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(mousePos.y - currPos.y, mousePos.x - currPos.x) * Mathf.Rad2Deg + 90);            
+            GameObject firedBullet = Instantiate(bulletPrefab, transform.position, Quaternion.Euler(0, 0, Mathf.Atan2(mousePos.y - currPos.y, mousePos.x - currPos.x) * Mathf.Rad2Deg + 90));
             firedBullet.transform.localScale *= bullets;
             firedBullet.GetComponent<Rigidbody2D>().velocity = (mousePos - currPos).normalized * bulletSpeed;
+            firedBullet.GetComponent<Bullet>().power = bullets;
             ammo -= bullets;
         }
     }
@@ -140,6 +143,12 @@ public class Player : MonoBehaviour
         if (collision.gameObject.tag == "Enemy")
         {
             health -= 10;
+
+            // push player away from enemy
+            Vector2 currPos = transform.position;
+            Vector2 enemyPos = collision.gameObject.transform.position;
+            _rigidbody.AddForce((currPos - enemyPos).normalized * 800);
+
         }
     }
 
