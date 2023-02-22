@@ -140,7 +140,13 @@ public class Player : MonoBehaviour
 
     public void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.tag == "Enemy")
+        if (collision.gameObject.tag == "Food")
+        {
+            // get hunger from food visual scripting component
+            hunger += collision.gameObject.GetComponent<food>().foodValue;
+            Destroy(collision.gameObject);
+        }
+        else if (collision.gameObject.tag == "Enemy")
         {
             health -= 10;
 
@@ -150,6 +156,7 @@ public class Player : MonoBehaviour
             _rigidbody.AddForce((currPos - enemyPos).normalized * 800);
 
         }
+        
     }
 
 }
