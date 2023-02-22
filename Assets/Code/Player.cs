@@ -23,6 +23,7 @@ public class Player : MonoBehaviour
     public Text healthText;
     public Text hungerText;
     public Transform hungerBar;
+    public Transform healthBar;
     
 
     Vector2 lastPos;
@@ -75,6 +76,7 @@ public class Player : MonoBehaviour
         hungerText.text = ""+hunger;
         healthText.text = ""+health;
         ammoText.text = ""+ammo;
+        healthBar.localScale = new Vector3(health/10, healthBar.localScale.y, healthBar.localScale.z);
         hungerBar.localScale = new Vector3(hunger/10, hungerBar.localScale.y, hungerBar.localScale.z);
     }
 
@@ -117,9 +119,27 @@ public class Player : MonoBehaviour
             Vector2 currPos = transform.position;
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             firedBullet.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(mousePos.y - currPos.y, mousePos.x - currPos.x) * Mathf.Rad2Deg + 90);            
+            firedBullet.transform.localScale *= bullets;
             firedBullet.GetComponent<Rigidbody2D>().velocity = (mousePos - currPos).normalized * bulletSpeed;
-            print(firedBullet.GetComponent<Rigidbody2D>().velocity.magnitude);           
             ammo -= bullets;
+        }
+    }
+
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Food")
+        {
+            // get hunger from food visual scripting component
+            hunger += collision.gameObject.GetComponent<food>().foodValue;
+            Destroy(collision.gameObject);
+        }
+    }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy")
+        {
+            health -= 10;
         }
     }
 
