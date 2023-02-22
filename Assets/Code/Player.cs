@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -49,6 +50,8 @@ public class Player : MonoBehaviour
         // reduce hunger and gain ammo based on distance moved
         distance += Vector2.Distance(transform.position, lastPos);
         hunger -= Vector2.Distance(transform.position, lastPos) / distForHunger;
+
+        // Starvation
         if (hunger <= 0)
         {
             health += hunger/starvationDivider;
@@ -59,19 +62,27 @@ public class Player : MonoBehaviour
         {
             speed = initialSpeed;
         }
+
+        // Overeating
         if (hunger > maxHunger)
         {
             health += (hunger - maxHunger) / 3;
             hunger = maxHunger;
         }
+
+        // Enforcing max health
         if (health > maxHealth)
         {
             health = maxHealth;
         }
+
+        // Current death implementation
         else if (health <= 0)
         {
             Destroy(gameObject);
         }
+
+        // Gain ammo
         if (distance >= distForAmmo)
         {
             ammo += (int)(distance / distForAmmo);
@@ -82,6 +93,8 @@ public class Player : MonoBehaviour
             }
         }
 
+
+        // Update UI
         scoreText.text = int.Parse(scoreText.text) + Time.deltaTime*200 + "";
         lastPos = transform.position;
         hungerText.text = ""+(int)hunger;
@@ -180,5 +193,13 @@ public class Player : MonoBehaviour
 
     void Eat(food eating){
         hunger += eating.foodValue;
+    }
+
+    public void onReset(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);            
+        }
     }
 }
