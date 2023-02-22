@@ -15,9 +15,11 @@ public class Bullet : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Enemy")
+        if (collision.gameObject.tag == "Enemy" || collision.gameObject.tag == "Wall")
         {
-            Destroy(collision.gameObject);
+            if(collision.gameObject.tag == "Enemy"){
+                Destroy(collision.gameObject);
+            }
             if(power > 1){
                 power--;
                 transform.localScale = size*power;

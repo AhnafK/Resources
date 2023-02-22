@@ -15,6 +15,7 @@ public class Player : MonoBehaviour
     public float health = 100;
     float maxHealth;
     public float hunger = 100;
+    public int starvationDivider = 5;
     float maxHunger;
     public float initialSpeed = 5;
     float speed;
@@ -25,7 +26,7 @@ public class Player : MonoBehaviour
     public Text loadedText;
     public Image hungerBar;
     public Image healthBar;
-    
+    bool canShoot;
 
     Vector2 lastPos;
     float distance;
@@ -38,6 +39,7 @@ public class Player : MonoBehaviour
         maxHealth = health;
         maxHunger = hunger;
         lastPos = transform.position;
+        canShoot = true;
     }
 
     void FixedUpdate()
@@ -47,7 +49,7 @@ public class Player : MonoBehaviour
         hunger -= Vector2.Distance(transform.position, lastPos) / distForHunger;
         if (hunger <= 0)
         {
-            health += hunger/10;
+            health += hunger/starvationDivider;
             hunger = 0;
             speed = initialSpeed / 5;
         }
@@ -115,7 +117,7 @@ public class Player : MonoBehaviour
     // shoot towards mouse
     public void OnShoot(InputAction.CallbackContext context)
     {
-        if (context.started && ammo >= bullets)
+        if (canShoot && context.started && ammo >= bullets)
         {            
             
             Vector2 currPos = transform.position;
@@ -125,7 +127,15 @@ public class Player : MonoBehaviour
             firedBullet.GetComponent<Rigidbody2D>().velocity = (mousePos - currPos).normalized * bulletSpeed;
             firedBullet.GetComponent<Bullet>().power = bullets;
             ammo -= bullets;
+            canShoot = false;
+            StartCoroutine(ShootDelay());
         }
+    }
+
+    IEnumerator ShootDelay()
+    {
+        yield return new WaitForSeconds(0.2f);
+        canShoot = true;
     }
 
     public void OnTriggerEnter2D(Collider2D collision)
