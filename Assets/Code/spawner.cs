@@ -19,7 +19,10 @@ public class spawner : MonoBehaviour
         {
             for(int i = 0; i < foodCount; i++){
                 int rand = Random.Range(0, foodList.Count);
-                Instantiate(foodList[rand], new Vector3(Random.Range(-20, 20), Random.Range(-11, 11), 0), Quaternion.identity);
+                food spawned = Instantiate(foodList[rand], new Vector3(Random.Range(-20, 20), Random.Range(-11, 11), 0), Quaternion.identity);
+                //turn it into a trigger after 0.2 second delay
+                StartCoroutine(TurnTrigger(spawned));
+
             }
         }
         // if no enemies in scene, spawn enemies randomly
@@ -31,6 +34,10 @@ public class spawner : MonoBehaviour
             }
             enemyCount++;
         }
+    }
 
+    IEnumerator TurnTrigger(food spawned){
+        yield return new WaitForSeconds(0.1f);
+        spawned.GetComponent<Collider2D>().isTrigger = true;
     }
 }

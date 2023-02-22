@@ -12,6 +12,7 @@ public class Player : MonoBehaviour
     public float distForHunger = 1;
     public int bulletSpeed = 10;
     public int ammo = 0;
+    public int maxAmmo = 25;
     public float health = 100;
     float maxHealth;
     public float hunger = 100;
@@ -24,6 +25,7 @@ public class Player : MonoBehaviour
     public Text healthText;
     public Text hungerText;
     public Text loadedText;
+    public Text scoreText;
     public Image hungerBar;
     public Image healthBar;
     bool canShoot;
@@ -74,7 +76,13 @@ public class Player : MonoBehaviour
         {
             ammo += (int)(distance / distForAmmo);
             distance = distance % distForAmmo;
+            if (ammo > maxAmmo)
+            {
+                ammo = maxAmmo;
+            }
         }
+
+        scoreText.text = int.Parse(scoreText.text) + Time.deltaTime*200 + "";
         lastPos = transform.position;
         hungerText.text = ""+(int)hunger;
         healthText.text = ""+(int)health;
@@ -126,6 +134,7 @@ public class Player : MonoBehaviour
             firedBullet.transform.localScale *= bullets;
             firedBullet.GetComponent<Rigidbody2D>().velocity = (mousePos - currPos).normalized * bulletSpeed;
             firedBullet.GetComponent<Bullet>().power = bullets;
+            firedBullet.GetComponent<Bullet>().scoreText = scoreText;
             ammo -= bullets;
             canShoot = false;
             StartCoroutine(ShootDelay());
@@ -143,7 +152,7 @@ public class Player : MonoBehaviour
         if (collision.gameObject.tag == "Food")
         {
             // get hunger from food visual scripting component
-            hunger += collision.gameObject.GetComponent<food>().foodValue;
+            Eat(collision.gameObject.GetComponent<food>());
             Destroy(collision.gameObject);
         }
     }
@@ -153,7 +162,7 @@ public class Player : MonoBehaviour
         if (collision.gameObject.tag == "Food")
         {
             // get hunger from food visual scripting component
-            hunger += collision.gameObject.GetComponent<food>().foodValue;
+            Eat(collision.gameObject.GetComponent<food>());
             Destroy(collision.gameObject);
         }
         else if (collision.gameObject.tag == "Enemy")
@@ -169,4 +178,7 @@ public class Player : MonoBehaviour
         
     }
 
+    void Eat(food eating){
+        hunger += eating.foodValue;
+    }
 }

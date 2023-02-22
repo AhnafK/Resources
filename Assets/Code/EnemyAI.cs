@@ -16,7 +16,7 @@ public class EnemyAI : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (player.position.x > transform.position.x ||
+        if (player && player.position.x > transform.position.x ||
         player.position.x < transform.position.x)
         {
             transform.localScale *= new Vector2(-1, 1);
