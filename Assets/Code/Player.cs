@@ -80,6 +80,8 @@ public class Player : MonoBehaviour
         else if (health <= 0)
         {
             Destroy(gameObject);
+            SceneManager.LoadScene("gameOver");
+            
         }
 
         // Gain ammo
@@ -177,6 +179,7 @@ public class Player : MonoBehaviour
             // get hunger from food visual scripting component
             Eat(collision.gameObject.GetComponent<food>());
             Destroy(collision.gameObject);
+            
         }
         else if (collision.gameObject.tag == "Enemy")
         {
@@ -192,7 +195,27 @@ public class Player : MonoBehaviour
     }
 
     void Eat(food eating){
-        hunger += eating.foodValue;
+        //hunger += eating.foodValue;
+        foodCount.instance.eatFood();
+    }
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (foodCount.instance.num >= 1)
+            {
+                hunger += 20;
+                foodCount.instance.useFood();
+            }
+
+          
+        }
+
+        if (health <= 0)
+        {
+            SceneManager.LoadScene("GameOver");
+        }
+
     }
 
     public void onReset(InputAction.CallbackContext context)
