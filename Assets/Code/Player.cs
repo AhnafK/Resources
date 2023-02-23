@@ -30,6 +30,8 @@ public class Player : MonoBehaviour
     public Image hungerBar;
     public Image healthBar;
     bool canShoot;
+    public List<Text> invHungers;
+    public List<Image> invFood;
 
     Vector2 lastPos;
     float distance;
@@ -79,8 +81,8 @@ public class Player : MonoBehaviour
         // Current death implementation
         else if (health <= 0)
         {
-            Destroy(gameObject);
             SceneManager.LoadScene("gameOver");
+            //Destroy(gameObject);
             
         }
 
@@ -121,7 +123,7 @@ public class Player : MonoBehaviour
             else if (context.ReadValue<float>() < 0)
             {
                 Debug.Log("Scrolling down");
-                if (bullets > 1)
+                if (bullets > 0)
                 {
                     bullets--;
                 }
@@ -140,7 +142,7 @@ public class Player : MonoBehaviour
     // shoot towards mouse
     public void OnShoot(InputAction.CallbackContext context)
     {
-        if (canShoot && context.started && ammo >= bullets)
+        if (canShoot && context.started && ammo >= bullets && bullets > 0)
         {            
             
             Vector2 currPos = transform.position;
@@ -167,8 +169,15 @@ public class Player : MonoBehaviour
         if (collision.gameObject.tag == "Food")
         {
             // get hunger from food visual scripting component
-            Eat(collision.gameObject.GetComponent<food>());
-            Destroy(collision.gameObject);
+            for(int i = 0; i < invFood.Count; i++){
+                if(invFood[i].enabled == false){
+                    invFood[i].sprite = collision.gameObject.GetComponent<SpriteRenderer>().sprite;
+                    invFood[i].enabled = true;                    
+                    invHungers[i].text = "" + collision.gameObject.GetComponent<food>().foodValue;                    
+                    Destroy(collision.gameObject);
+                    break;
+                }
+            }
         }
     }
 
@@ -177,8 +186,15 @@ public class Player : MonoBehaviour
         if (collision.gameObject.tag == "Food")
         {
             // get hunger from food visual scripting component
-            Eat(collision.gameObject.GetComponent<food>());
-            Destroy(collision.gameObject);
+            for(int i = 0; i < invFood.Count; i++){
+                if(invFood[i].enabled == false){
+                    invFood[i].sprite = collision.gameObject.GetComponent<SpriteRenderer>().sprite;
+                    invFood[i].enabled = true;                    
+                    invHungers[i].text = "" + collision.gameObject.GetComponent<food>().foodValue;                    
+                    Destroy(collision.gameObject);
+                    break;
+                }
+            }
             
         }
         else if (collision.gameObject.tag == "Enemy")
@@ -194,10 +210,6 @@ public class Player : MonoBehaviour
         
     }
 
-    void Eat(food eating){
-        //hunger += eating.foodValue;
-        foodCount.instance.eatFood();
-    }
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -223,6 +235,46 @@ public class Player : MonoBehaviour
         if (context.started)
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);            
+        }
+    }
+
+    public void onSelect3()
+    {
+        if (invFood[3].enabled == true)
+        {
+            hunger += int.Parse(invHungers[2].text);
+            invFood[3].enabled = false;
+            invHungers[3].text = "" + 0;
+        }
+    }
+
+    public void onSelect2()
+    {
+        if (invFood[2].enabled == true)
+        {
+            hunger += int.Parse(invHungers[2].text);
+            invFood[2].enabled = false;
+            invHungers[2].text = "" + 0;
+        }
+    }
+
+    public void onSelect1()
+    {
+        if (invFood[1].enabled == true)
+        {
+            hunger += int.Parse(invHungers[1].text);
+            invFood[1].enabled = false;
+            invHungers[1].text = "" + 0;
+        }
+    }
+
+    public void onSelect0()
+    {
+        if (invFood[0].enabled == true)
+        {
+            hunger += int.Parse(invHungers[0].text);
+            invFood[0].enabled = false;
+            invHungers[0].text = "" + 0;
         }
     }
 }
